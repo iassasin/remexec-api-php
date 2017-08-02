@@ -11,6 +11,73 @@ class RemExec {
 		$this->connection->close();
 	}
 
+	public function close(){
+		$this->sendCommand('EXIT');
+		$this->connection->close();
+	}
+
+	public function sendFileStream($name, $body){
+		$this->sendCommand('FILE', [], [
+			'Name' => $name,
+			'Size' => strlen($body),
+		]);
+		$this->sendBody($body);
+
+		$resp = $this->readCommand();
+		if ($resp['command'] == 'OK'){
+			return 0;
+		}
+		else if ($resp['command'] == 'ERROR'){
+			return +$resp['args'][0];
+		}
+	}
+
+	public function fetchFileStream($name){
+		$this->sendCommand('FETCH', [$name]);
+
+		$resp = $this->readCommand();
+		if ($resp['command'] != 'FILE'){
+			return null;
+		}
+
+		return $this->readBody(+$resp['params']['Size']);
+	}
+
+	public function execTask($task, $args, $callback){
+		if (count($args) > 0){
+			$args = ['Arguments' => $args];
+		}
+
+		$this->sendCommand('EXEC', [$task], $args);
+
+		$resp = $this->readCommand();
+		if ($resp['command'] == 'ERROR'){
+			return +$resp['args'][0];
+		}
+		else if ($resp['command'] != 'OK'){
+			return false;
+		}
+
+		while (true){
+			$resp = $this->readCommand();
+			if ($resp['command'] == '' || $resp['command'] == 'END'){
+				break;
+			}
+			else if ($resp['command'] == 'STREAM'){
+				$body = $this->readBody(+$resp['params']['Size']);
+				if (is_callable($callback)){
+					$callback(+$resp['args'][0], $body);
+				}
+			}
+			else {
+				//unexcepted server command
+				break;
+			}
+		}
+
+		return 0;
+	}
+
 	private function readCommand(){
 		$line = $this->connection->readLine();
 		if ($line === null){
@@ -45,6 +112,10 @@ class RemExec {
 		$body = $this->connection->read($size);
 		$this->connection->read(2); //read \n\n
 		return $body;
+	}
+
+	private function sendBody($data){
+		$this->connection->write($data."\n\n");
 	}
 
 	private function sendCommand($command, $args = [], $params = []){
