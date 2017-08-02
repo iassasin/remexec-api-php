@@ -67,10 +67,10 @@ class RemExec {
 	}
 
 	private function encodeParameter($val){
-		return urlencode($val);
+		return preg_replace_callback('/[%; \t\n\r]/', function($v){ return '%'.bin2hex($v[0]); }, $val);
 	}
 
 	private function decodeParameter($val){
-		return urldecode($val);
+		return preg_replace_callback('/%(\d\d)/', function($v){ return hex2bin($v[1]); }, $val);
 	}
 }
