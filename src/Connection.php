@@ -27,15 +27,16 @@ class Connection {
 			return "";
 		}
 
-		return fgets($this->conn, $n);
+		return fread($this->conn, $n);
 	}
 
 	public function readLine(){
 		if (feof($this->conn)){
-			return "";
+			return null;
 		}
 
-		return fgets($this->conn);
+		$line = fgets($this->conn);
+		return substr($line, 0, strlen($line) - 1);
 	}
 
 	public function close(){
