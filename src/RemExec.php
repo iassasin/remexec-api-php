@@ -63,6 +63,9 @@ class RemExec {
 			if ($resp['command'] == '' || $resp['command'] == 'END'){
 				break;
 			}
+			else if ($resp['command'] == 'ERROR'){
+				return +$resp['args'][0];
+			}
 			else if ($resp['command'] == 'STREAM'){
 				$body = $this->readBody(+$resp['params']['Size']);
 				if (is_callable($callback)){
