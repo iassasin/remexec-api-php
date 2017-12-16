@@ -3,8 +3,8 @@
 namespace RemExec\Api;
 
 class RemExec {
-	public function __construct($addr){
-		$this->connection = new Connection($addr);
+	public function __construct($addr, $timeout = 5){
+		$this->connection = new Connection($addr, $timeout);
 	}
 
 	public function __destruct(){

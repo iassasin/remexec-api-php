@@ -4,7 +4,7 @@ Provide basic commands for RemExec. Required composer to generate autoload.php.
 ## Connection
 ```php
 use RemExec\Api\RemExec;
-$rx = new RemExec('localhost:3500');
+$rx = new RemExec('localhost:3500', 5); // timeout = 5 sec.
 //...work with $rx...
 $rx->close();
 ```

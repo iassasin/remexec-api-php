@@ -5,13 +5,13 @@ namespace RemExec\Api;
 class Connection {
 	private $conn;
 
-	public function __construct($addr){
-		$this->conn = stream_socket_client($addr, $errno, $errstr, 5);
+	public function __construct($addr, $timeout){
+		$this->conn = stream_socket_client($addr, $errno, $errstr, $timeout);
 		if (!$this->conn){
 			throw new \Exception("Can't connect to RemExec: $errstr ($errno)");
 		}
 
-		stream_set_timeout($this->conn, 5);
+		stream_set_timeout($this->conn, $timeout);
 	}
 
 	public function __destruct(){
@@ -19,7 +19,9 @@ class Connection {
 	}
 
 	public function write($str){
-		fwrite($this->conn, $str);
+		if (!feof($this->conn)){
+			fwrite($this->conn, $str);
+		}
 	}
 
 	public function read($n){
