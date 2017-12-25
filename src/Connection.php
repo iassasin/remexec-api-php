@@ -19,17 +19,30 @@ class Connection {
 	}
 
 	public function write($str){
-		if (!feof($this->conn)){
-			fwrite($this->conn, $str);
+		$written = 0;
+		$cnt = strlen($str);
+		while (!feof($this->conn) && $written < $cnt){
+			$res = fwrite($this->conn, substr($str, $written));
+			if ($res === false){
+				throw new \Exception("Connection error with RemExec: can't write data");
+			}
+			$written += $res;
 		}
 	}
 
 	public function read($n){
-		if (feof($this->conn)){
-			return "";
+		$res = '';
+
+		while (!feof($this->conn) && $n > 0){
+			$rd = fread($this->conn, $n);
+			if ($rd === false){
+				throw new \Exception("Connection error with RemExec: can't read data");
+			}
+			$n -= strlen($rd);
+			$res .= $rd;
 		}
 
-		return fread($this->conn, $n);
+		return $res;
 	}
 
 	public function readLine(){
@@ -38,6 +51,11 @@ class Connection {
 		}
 
 		$line = fgets($this->conn);
+
+		if ($line === false){
+			throw new \Exception("Connection error with RemExec: can't read data (line)");
+		}
+
 		return substr($line, 0, strlen($line) - 1);
 	}
 
